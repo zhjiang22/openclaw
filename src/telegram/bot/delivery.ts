@@ -6,6 +6,8 @@ import type { RuntimeEnv } from "../../runtime.js";
 import type { StickerMetadata, TelegramContext } from "./types.js";
 import { chunkMarkdownTextWithMode, type ChunkMode } from "../../auto-reply/chunk.js";
 import { danger, logVerbose } from "../../globals.js";
+import { createSubsystemLogger } from "../../logging/subsystem.js";
+const telegramMediaLog = createSubsystemLogger("telegram/media");
 import { formatErrorMessage } from "../../infra/errors.js";
 import { mediaKindFromMime } from "../../media/constants.js";
 import { fetchRemoteMedia } from "../../media/fetch.js";
@@ -423,15 +425,13 @@ export async function resolveMedia(
     originalName,
   );
   let placeholder = "<media:document>";
-  if (msg.photo) {
-    placeholder = "<media:image>";
-  } else if (msg.video) {
-    placeholder = "<media:video>";
-  } else if (msg.video_note) {
-    placeholder = "<media:video>";
-  } else if (msg.audio || msg.voice) {
-    placeholder = "<media:audio>";
-  }
+  if (msg.photo) placeholder = "<media:image>";
+  else if (msg.video) placeholder = "<media:video>";
+  else if (msg.video_note) placeholder = "<media:video>";
+  else if (msg.audio || msg.voice) placeholder = "<media:audio>";
+  telegramMediaLog.info(
+    `resolveMedia ${placeholder} path=${saved.path} contentType=${saved.contentType ?? "unknown"}`,
+  );
   return { path: saved.path, contentType: saved.contentType, placeholder };
 }
 

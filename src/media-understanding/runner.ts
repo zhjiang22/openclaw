@@ -4,6 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import type { MsgContext } from "../auto-reply/templating.js";
 import type { OpenClawConfig } from "../config/config.js";
+import { applyTemplate } from "../auto-reply/templating.js";
+import { requireApiKey, resolveApiKeyForProvider } from "../agents/model-auth.js";
+import { logVerbose, shouldLogVerbose } from "../globals.js";
+import { createSubsystemLogger } from "../logging/subsystem.js";
+const mediaLog = createSubsystemLogger("media-understanding");
+import { runExec } from "../process/exec.js";
 import type {
   MediaUnderstandingConfig,
   MediaUnderstandingModelConfig,
@@ -1054,8 +1060,10 @@ async function runCliEntry(params: {
     });
     const text = trimOutput(resolved, maxChars);
     if (!text) {
+      mediaLog.info(`CLI returned empty output for ${capability}`);
       return null;
     }
+    mediaLog.info(`CLI ${capability} success: ${text.length} chars`);
     return {
       kind: capability === "audio" ? "audio.transcription" : `${capability}.description`,
       attachmentIndex: params.attachmentIndex,

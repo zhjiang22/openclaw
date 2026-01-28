@@ -37,6 +37,8 @@ import {
   normalizeMediaAttachments,
   runCapability,
 } from "./runner.js";
+import { createSubsystemLogger } from "../logging/subsystem.js";
+const log = createSubsystemLogger("media-understanding");
 
 export type ApplyMediaUnderstandingResult = {
   outputs: MediaUnderstandingOutput[];
@@ -466,6 +468,11 @@ export async function applyMediaUnderstanding(params: {
       .find((value) => value && value.trim()) ?? undefined;
 
   const attachments = normalizeMediaAttachments(ctx);
+  if (attachments.length > 0) {
+    log.info(
+      `media-understanding: processing ${attachments.length} attachment(s): ${attachments.map((a) => `${a.mime ?? "unknown"}:${a.path ?? "?"}`).join(", ")}`,
+    );
+  }
   const providerRegistry = buildProviderRegistry(params.providers);
   const cache = createMediaAttachmentCache(attachments);
 
@@ -503,10 +510,16 @@ export async function applyMediaUnderstanding(params: {
     }
 
     if (outputs.length > 0) {
+      log.info(
+        `media-understanding: ${outputs.length} output(s): ${outputs.map((o) => o.kind).join(", ")}`,
+      );
       ctx.Body = formatMediaUnderstandingBody({ body: ctx.Body, outputs });
       const audioOutputs = outputs.filter((output) => output.kind === "audio.transcription");
       if (audioOutputs.length > 0) {
         const transcript = formatAudioTranscripts(audioOutputs);
+        log.info(
+          `media-understanding: audio transcription complete, length=${transcript.length}`,
+        );
         ctx.Transcript = transcript;
         if (originalUserText) {
           ctx.CommandBody = originalUserText;

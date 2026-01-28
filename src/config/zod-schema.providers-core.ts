@@ -113,6 +113,25 @@ export const TelegramAccountSchemaBase = z
     draftChunk: BlockStreamingChunkSchema.optional(),
     blockStreamingCoalesce: BlockStreamingCoalesceSchema.optional(),
     streamMode: z.enum(["off", "partial", "block"]).optional().default("partial"),
+    thinking: z
+      .object({
+        enabled: z.boolean().optional(),
+        mode: z.enum(["stream", "off"]).optional(),
+        updateInterval: z.number().int().positive().optional(),
+        maxLength: z.number().int().positive().optional(),
+        completionMode: z.enum(["delete", "summary", "keep"]).optional(),
+      })
+      .strict()
+      .optional(),
+    toolDisplay: z
+      .object({
+        enabled: z.boolean().optional(),
+        mode: z.enum(["inline", "separate"]).optional(),
+        showArgs: z.boolean().optional(),
+        maxArgsLength: z.number().int().positive().optional(),
+      })
+      .strict()
+      .optional(),
     mediaMaxMb: z.number().positive().optional(),
     timeoutSeconds: z.number().int().positive().optional(),
     retry: RetryConfigSchema,
