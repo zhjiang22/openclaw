@@ -469,7 +469,7 @@ export const buildTelegramMessageContext = async ({
     shouldAckReaction() && msg.message_id && reactionApi
       ? withTelegramApiErrorLogging({
           operation: "setMessageReaction",
-          fn: () => reactionApi(chatId, msg.message_id, [{ type: "emoji", emoji: ackReaction }]),
+          fn: () => reactionApi(chatId, msg.message_id, [{ type: "emoji", emoji: "🤔" }]),
         }).then(
           () => true,
           (err) => {

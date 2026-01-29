@@ -9,7 +9,6 @@ import { resolveDefaultModelForAgent } from "../agents/model-selection.js";
 import { resolveChunkMode } from "../auto-reply/chunk.js";
 import { clearHistoryEntriesIfEnabled } from "../auto-reply/reply/history.js";
 import { dispatchReplyWithBufferedBlockDispatcher } from "../auto-reply/reply/provider-dispatcher.js";
-import { removeAckReactionAfterReply } from "../channels/ack-reactions.js";
 import { logAckFailure, logTypingFailure } from "../channels/logging.js";
 import { createReplyPrefixContext } from "../channels/reply-prefix.js";
 import { createTypingCallbacks } from "../channels/typing.js";
@@ -64,7 +63,6 @@ export const dispatchTelegramMessage = async ({
     sendRecordVoice,
     ackReactionPromise,
     reactionApi,
-    removeAckAfterReply,
   } = context;
 
   const isPrivateChat = msg.chat.type === "private";
@@ -89,9 +87,7 @@ export const dispatchTelegramMessage = async ({
   const thinkingCfg = telegramCfg.thinking;
   const toolDisplayCfg = telegramCfg.toolDisplay ?? {};
   const thinkingEnabled =
-    isPrivateChat &&
-    thinkingCfg?.enabled === true &&
-    thinkingCfg?.mode !== "off";
+    isPrivateChat && thinkingCfg?.enabled === true && thinkingCfg?.mode !== "off";
   let thinkingUpdater: ThinkingUpdater | undefined;
   if (thinkingEnabled) {
     thinkingUpdater = createThinkingUpdater({
@@ -350,21 +346,20 @@ export const dispatchTelegramMessage = async ({
     }
     return;
   }
-  removeAckReactionAfterReply({
-    removeAfterReply: removeAckAfterReply,
-    ackReactionPromise,
-    ackReactionValue: ackReactionPromise ? "ack" : null,
-    remove: () => reactionApi?.(chatId, msg.message_id ?? 0, []) ?? Promise.resolve(),
-    onError: (err) => {
-      if (!msg.message_id) return;
-      logAckFailure({
-        log: logVerbose,
-        channel: "telegram",
-        target: `${chatId}/${msg.message_id}`,
-        error: err,
+  // 回复完成后，将反应从🤔改为🎉
+  if (ackReactionPromise && reactionApi && msg.message_id) {
+    void ackReactionPromise.then((didAck) => {
+      if (!didAck) return;
+      reactionApi(chatId, msg.message_id!, [{ type: "emoji", emoji: "🎉" }]).catch((err) => {
+        logAckFailure({
+          log: logVerbose,
+          channel: "telegram",
+          target: `${chatId}/${msg.message_id}`,
+          error: err,
+        });
       });
-    },
-  });
+    });
+  }
   if (isGroup && historyKey) {
     clearHistoryEntriesIfEnabled({ historyMap: groupHistories, historyKey, limit: historyLimit });
   }
