@@ -1211,6 +1211,8 @@ Docs: https://docs.openclaw.ai
 - Docs: credit both contributors for Control UI refresh. (#1852) Thanks @EnzeD.
 - Docs: keep docs header sticky so navbar stays visible while scrolling. (#2445) Thanks @chenyuan99.
 - Docs: update exe.dev install instructions. (#https://github.com/openclaw/openclaw/pull/3047) Thanks @zackerthescar.
+- Build: skip redundant UI install step in the Dockerfile. (#4584) Thanks @obviyus.
+- Antigravity: update User-Agent to 1.15.8 to fix "no longer supported" errors. (#4603) Thanks @Kuberwastaken.
 
 ### Breaking
 
