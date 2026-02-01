@@ -395,7 +395,7 @@ async function discoverProject(accessToken: string): Promise<string> {
   const headers = {
     Authorization: `Bearer ${accessToken}`,
     "Content-Type": "application/json",
-    "User-Agent": "google-api-nodejs-client/9.15.1",
+    "User-Agent": "antigravity/1.15.8 linux/arm64",
     "X-Goog-Api-Client": "gl-node/openclaw",
   };
 
