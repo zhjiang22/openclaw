@@ -79,8 +79,21 @@ function createStreamFnWithExtraParams(
   extraParams: Record<string, unknown> | undefined,
   provider: string,
 ): StreamFn | undefined {
-  if (!extraParams || Object.keys(extraParams).length === 0) {
-    return undefined;
+  const streamParams: Partial<SimpleStreamOptions> & { cacheControlTtl?: CacheControlTtl } = {};
+  if (extraParams) {
+    if (typeof extraParams.temperature === "number") {
+      streamParams.temperature = extraParams.temperature;
+    }
+    if (typeof extraParams.maxTokens === "number") {
+      streamParams.maxTokens = extraParams.maxTokens;
+    }
+    const cacheControlTtl = resolveCacheControlTtl(extraParams, provider, modelId);
+    if (cacheControlTtl) {
+      streamParams.cacheControlTtl = cacheControlTtl;
+    }
+    if (extraParams.headers && typeof extraParams.headers === "object") {
+      streamParams.headers = extraParams.headers as Record<string, string>;
+    }
   }
 
   const streamParams: CacheRetentionStreamOptions = {};
@@ -95,6 +108,25 @@ function createStreamFnWithExtraParams(
     streamParams.cacheRetention = cacheRetention;
   }
 
+  // Patch: Antigravity version override
+  if (provider === "google-antigravity") {
+    streamParams.headers = {
+      ...streamParams.headers,
+      "User-Agent": "antigravity/1.15.8 windows/amd64",
+      "X-Goog-Api-Client": "google-cloud-sdk vscode_cloudshelleditor/0.1",
+      "Client-Metadata": JSON.stringify({
+        ide: "antigravity",
+        ideVersion: "1.15.8",
+        appName: "codeium-extension",
+        devMode: "false",
+        extensionVersion: "",
+        language: "UNSPECIFIED",
+        os: "windows",
+        userTierId: "g1-pro-tier",
+      }),
+    };
+  }
+
   if (Object.keys(streamParams).length === 0) {
     return undefined;
   }
@@ -106,6 +138,7 @@ function createStreamFnWithExtraParams(
     underlying(model, context, {
       ...streamParams,
       ...options,
+      headers: { ...streamParams.headers, ...options?.headers },
     });
 
   return wrappedStreamFn;
