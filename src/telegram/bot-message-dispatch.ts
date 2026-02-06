@@ -24,8 +24,8 @@ import { danger, logVerbose } from "../globals.js";
 import { deliverReplies } from "./bot/delivery.js";
 import { resolveTelegramDraftStreamingChunking } from "./draft-chunking.js";
 import { createTelegramDraftStream } from "./draft-stream.js";
-import { createThinkingUpdater, type ThinkingUpdater } from "./thinking-updater.js";
 import { cacheSticker, describeStickerImage } from "./sticker-cache.js";
+import { createThinkingUpdater, type ThinkingUpdater } from "./thinking-updater.js";
 
 const EMPTY_RESPONSE_FALLBACK = "No response generated. Please try again.";
 
@@ -112,15 +112,13 @@ export const dispatchTelegramMessage = async ({
   const thinkingCfg = telegramCfg.thinking;
   const toolDisplayCfg = telegramCfg.toolDisplay ?? {};
   const thinkingEnabled =
-    isPrivateChat &&
-    thinkingCfg?.enabled === true &&
-    thinkingCfg?.mode !== "off";
+    isPrivateChat && thinkingCfg?.enabled === true && thinkingCfg?.mode !== "off";
   let thinkingUpdater: ThinkingUpdater | undefined;
   if (thinkingEnabled) {
     thinkingUpdater = createThinkingUpdater({
       api: bot.api,
       chatId,
-      messageThreadId: resolvedThreadId,
+      messageThreadId: threadSpec.id,
       thinkingConfig: thinkingCfg!,
       toolDisplay: toolDisplayCfg,
     });
