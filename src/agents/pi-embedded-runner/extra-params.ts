@@ -79,7 +79,7 @@ function createStreamFnWithExtraParams(
   extraParams: Record<string, unknown> | undefined,
   provider: string,
 ): StreamFn | undefined {
-  const streamParams: Partial<SimpleStreamOptions> & { cacheControlTtl?: CacheControlTtl } = {};
+  const streamParams: CacheRetentionStreamOptions = {};
   if (extraParams) {
     if (typeof extraParams.temperature === "number") {
       streamParams.temperature = extraParams.temperature;
@@ -87,21 +87,9 @@ function createStreamFnWithExtraParams(
     if (typeof extraParams.maxTokens === "number") {
       streamParams.maxTokens = extraParams.maxTokens;
     }
-    const cacheControlTtl = resolveCacheControlTtl(extraParams, provider, modelId);
-    if (cacheControlTtl) {
-      streamParams.cacheControlTtl = cacheControlTtl;
-    }
     if (extraParams.headers && typeof extraParams.headers === "object") {
       streamParams.headers = extraParams.headers as Record<string, string>;
     }
-  }
-
-  const streamParams: CacheRetentionStreamOptions = {};
-  if (typeof extraParams.temperature === "number") {
-    streamParams.temperature = extraParams.temperature;
-  }
-  if (typeof extraParams.maxTokens === "number") {
-    streamParams.maxTokens = extraParams.maxTokens;
   }
   const cacheRetention = resolveCacheRetention(extraParams, provider);
   if (cacheRetention) {
