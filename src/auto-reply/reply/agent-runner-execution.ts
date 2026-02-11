@@ -353,6 +353,8 @@ export async function runAgentTurnWithFallback(params: {
                   autoCompactionCompleted = true;
                 }
               }
+              // Forward agent events to the outer caller (e.g. thinking updater).
+              await params.opts?.onAgentEvent?.(evt);
             },
             // Always pass onBlockReply so flushBlockReplyBuffer works before tool execution,
             // even when regular block streaming is disabled. The handler sends directly
